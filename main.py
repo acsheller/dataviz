@@ -269,17 +269,18 @@ elif page == 'Global Temperature Averages since 1849':
 
 
     #TODO --make a special dataframefor this
+
     def plot_temp(df):
         import plotly.graph_objects as go
         import numpy as np
-        coefficients = np.polyfit(df.year.to_numpy(),np.array(df.averagetemperature.mean()),1)
+        coefficients = np.polyfit(df.year.to_numpy(),df.avg_yrly_temp.to_numpy(),1)
         trendline = np.polyval(coefficients,df.year.to_numpy())
-        sc_plot = go.Scatter(x=df.year, y=df.averagetemperature.mean() ,mode='markers',
-                                 name='Global Temperatures')
+        sc_plot = go.Scatter(x=df.year, y=df.avg_yrly_temp ,mode='markers',
+                                 name='Global Average Temperatures')
         trend_plot = go.Scatter(x=df.year, y=trendline ,mode='lines',
                                  name='Trendline')
         fig = go.Figure(data=[sc_plot,trend_plot])
-        fig.update_layout(title='Global Temperatures Trends',
+        fig.update_layout(title='Global Temperature Averages',
                         xaxis_title='Year',
                         yaxis_title='Temp in Degress C')
 
@@ -287,10 +288,9 @@ elif page == 'Global Temperature Averages since 1849':
 
     def plot_heatmap(df):
         import plotly.express as px
-        w31 = df.groupby(['country','year'])['averagetemperature'].mean().reset_index(name='avg_yrly_temp')
-        w32 = w31.pivot(index='country', columns='year')['avg_yrly_temp'].fillna(0)
-
-        fig = px.imshow(w32, x=w32.columns, y=w32.index)
+        # Define custom colors for the bars
+        colors = ['red', 'green', 'blue', 'orange', 'purple']
+        fig = px.imshow(df, x=df.columns, y=df.index,colors=colors)
         fig.update_layout(width=800,height=700)
         return fig        
 
@@ -312,13 +312,16 @@ elif page == 'Global Temperature Averages since 1849':
         country = c2.selectbox("Choose a Specific Country",ab )
 
         data = get_gltm_data(what=None,country=country)
-
+        data2 = data.groupby(['year'])['averagetemperature'].mean().reset_index(name='avg_yrly_temp')
+        print(data2.head())
         c1.map(data)
         c1.dataframe(data)
-        fig = plot_temp(data)
+        fig = plot_temp(data2)
         c2.plotly_chart(fig)
         if country=='All':
-            fig2 = plot_heatmap(data)
+            data3 = data.groupby(['country','year'])['averagetemperature'].mean().reset_index(name='avg_yrly_temp')
+            data3 = data3.pivot(index='country', columns='year')['avg_yrly_temp'].fillna(0)
+            fig2 = plot_heatmap(data3)
             c2.plotly_chart(fig2)
 
     except URLError as e:
