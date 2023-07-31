@@ -145,7 +145,7 @@ if page == 'U.S. Temperature Outliers':
         states_list.sort()
         ab = ['All']
         ab.extend(states_list)
-        state = c2.selectbox("Choose a Specific State",ab )
+        state = st.sidebar.selectbox("Choose a Specific State",ab )
         data = get_WO_data()
         if state != 'All':
             data = data[data.state == state]
@@ -269,7 +269,7 @@ elif page == 'U.S. Weather Radars':
         )
 
         #c1.map(get_WR_data(), color='color')
-        r_type = c2.radio("Select Radar Type",('All','NEXRAD','TDWR'))
+        r_type = st.sidebar.radio("Select Radar Type",('All','NEXRAD','TDWR'))
         import numpy as np
         states_list =  list(get_WR_data(what=None).state.unique())
         #print(type(states_list))
@@ -277,7 +277,7 @@ elif page == 'U.S. Weather Radars':
         states_list.sort()
         ab = ['All']
         ab.extend(states_list)
-        state = c2.selectbox("Choose a Specific State",ab )
+        state = st.sidebar.selectbox("Choose a Specific State",ab )
         data = ""
         if r_type == 'All':
             st.subheader("Both TDWR and NEXRAD")
@@ -343,20 +343,20 @@ elif page == 'Global Temperature Averages since 1750':
         trend_plot = go.Scatter(x=df.year, y=trendline ,mode='lines',
                                  name='Trendline')
         fig = go.Figure(data=[sc_plot,trend_plot])
-        fig.update_layout(title='Global Temperature Averages',
+        fig.update_layout(title='Global Temperature Averages Trend',
                         xaxis_title='Year',
                         yaxis_title='Temp in Degress C')
 
         return fig
 
-    def plot_heatmap(df, its_type='year'):
+    def plot_heatmap(df, its_type='year',country='All'):
         import plotly.express as px
 
         fig = px.imshow(df, x=df.columns, y=df.index)
         if its_type == 'year':
-            fig.update_layout(width=700,height=500)
+            fig.update_layout(title='Heatmap --Global Temperature Averages Trend',width=700,height=500)
         elif its_type == 'month':
-            fig.update_layout(width=700,height=500,xaxis_type='category')
+            fig.update_layout(title='Heatmap --Global Temperature Averages Trend {}'.format(country),width=700,height=500,xaxis_type='category')
         return fig        
 
     try:
@@ -394,7 +394,7 @@ elif page == 'Global Temperature Averages since 1750':
         ab = ['All']
         ab.extend(country_list)
 
-        country = c2.selectbox("Choose a Specific Country",ab )
+        country = st.sidebar.selectbox("Choose a Specific Country",ab )
 
         data = get_gltm_data(what=None,country=country)
         data2 = data.groupby(['year'])['averagetemperature'].mean().reset_index(name='avg_yrly_temp')
@@ -418,7 +418,7 @@ elif page == 'Global Temperature Averages since 1750':
             data3 = data3.pivot(index='month', columns='year')['avg_yrly_temp'].fillna(0)
             print(data3.info())
             print(data3.head())
-            fig2 = plot_heatmap(data3,its_type='month')
+            fig2 = plot_heatmap(data3,its_type='month',country=country)
             c2.plotly_chart(fig2)
 
     except URLError as e:
