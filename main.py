@@ -13,7 +13,27 @@ st.set_page_config(layout = "wide")
 
 c1,c2 = st.columns(2)
 
-page = st.sidebar.selectbox('Select View',['Start','U.S. Temperature Outliers','U.S. Weather Radars','Global Temperature Averages since 1849']) 
+page = st.sidebar.selectbox('Select View',['Start','U.S. Temperature Outliers','U.S. Weather Radars','Global Temperature Averages since 1750']) 
+
+st.markdown(
+"""
+<script>
+// Function to scroll to the top of the page
+function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Scroll to top on page load
+window.onload = function() {
+    scrollToTop();
+};
+</script>
+""",
+unsafe_allow_html=True
+)
+
+
+
 
 
 if page == 'Start':
@@ -52,17 +72,17 @@ if page == 'U.S. Temperature Outliers':
         df = pd.read_csv('data/weather-anomalies-1964-2013-ymd-40k.csv',engine='pyarrow',dtype_backend='pyarrow')
         return df
 
-    @st.cache_data(show_spinner=True)
-    def get_max_temp_data_for_plot():
+
+    def get_max_temp_data_for_plot(df):
         
-        df = pd.read_csv('data/weather-anomalies-1964-2013-ymd-40k.csv')
+        #df = pd.read_csv('data/weather-anomalies-1964-2013-ymd-40k.csv')
         results = df.groupby('year')['max_temp'].mean()
         return results.to_frame().reset_index()
 
-    @st.cache_data(show_spinner=True)
-    def get_min_temp_data_for_plot():
+
+    def get_min_temp_data_for_plot(df):
         
-        df = pd.read_csv('data/weather-anomalies-1964-2013-ymd-40k.csv')
+        #df = pd.read_csv('data/weather-anomalies-1964-2013-ymd-40k.csv')
         results = df.groupby('year')['min_temp'].mean()
         return results.to_frame().reset_index()
 
@@ -84,6 +104,7 @@ if page == 'U.S. Temperature Outliers':
 
 
     def plot_min_temp(df):
+        #print(df)
         import plotly.graph_objects as go
         import numpy as np
         coefficients = np.polyfit(df.year.to_numpy(),df.min_temp.to_numpy(),1)
@@ -100,6 +121,37 @@ if page == 'U.S. Temperature Outliers':
         return fig
 
     try:
+        st.markdown(
+        """
+        <script>
+        // Function to scroll to the top of the page
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Scroll to top on page load
+        window.onload = function() {
+            scrollToTop();
+        };
+        </script>
+        """,
+        unsafe_allow_html=True
+        )
+
+
+        states_list =  list(get_WO_data().state.unique())
+        #print(type(states_list))
+        #print(states_list.sort())
+        states_list.sort()
+        ab = ['All']
+        ab.extend(states_list)
+        state = c2.selectbox("Choose a Specific State",ab )
+        data = get_WO_data()
+        if state != 'All':
+            data = data[data.state == state]
+
+
+
         c1.header("US Temperature Outlier 1964 - 2013")
         c1.markdown(
         """
@@ -113,8 +165,8 @@ if page == 'U.S. Temperature Outliers':
         """
 
         )
-        c1.map(get_WO_data())
-        c1.dataframe(get_WO_data())
+        c1.map(data)
+        c1.dataframe(data)
         c2.subheader('Temperature Trends 1964 - 2013')
         c2.markdown(
         """
@@ -124,14 +176,11 @@ if page == 'U.S. Temperature Outliers':
         One might expect this with the climate situation the way it is (not very good: global warming for example).
         
         """
-
         )
 
-
-
-        fig = plot_max_temp(get_max_temp_data_for_plot())
+        fig = plot_max_temp(get_max_temp_data_for_plot(data))
         c2.plotly_chart(fig)
-        fig2 = plot_min_temp(get_min_temp_data_for_plot())
+        fig2 = plot_min_temp(get_min_temp_data_for_plot(data))
         c2.plotly_chart(fig2)
 
 
@@ -187,6 +236,23 @@ elif page == 'U.S. Weather Radars':
                 return df[df.state == state]
 
     try:
+        st.markdown(
+        """
+        <script>
+        // Function to scroll to the top of the page
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Scroll to top on page load
+        window.onload = function() {
+            scrollToTop();
+        };
+        </script>
+        """,
+        unsafe_allow_html=True
+        )
+
         c1.header("US Weather Radar Stations")
         c1.markdown(
         """
@@ -253,7 +319,7 @@ elif page == 'U.S. Weather Radars':
             % e.reason
         )
 
-elif page == 'Global Temperature Averages since 1849':
+elif page == 'Global Temperature Averages since 1750':
 
     @st.cache_data(show_spinner=True)
     def get_gltm_data(what=None,country='All'):
@@ -266,9 +332,6 @@ elif page == 'Global Temperature Averages since 1849':
             print("Returning country = {}".format(country))
             return df[df.country==country]
 
-
-
-    #TODO --make a special dataframefor this
 
     def plot_temp(df):
         import plotly.graph_objects as go
@@ -286,15 +349,36 @@ elif page == 'Global Temperature Averages since 1849':
 
         return fig
 
-    def plot_heatmap(df):
+    def plot_heatmap(df, its_type='year'):
         import plotly.express as px
-        # Define custom colors for the bars
-        colors = ['red', 'green', 'blue', 'orange', 'purple']
+
         fig = px.imshow(df, x=df.columns, y=df.index)
-        fig.update_layout(width=800,height=700)
+        if its_type == 'year':
+            fig.update_layout(width=700,height=500)
+        elif its_type == 'month':
+            fig.update_layout(width=700,height=500,xaxis_type='category')
         return fig        
 
     try:
+        st.markdown(
+        """
+        <script>
+        // Function to scroll to the top of the page
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Scroll to top on page load
+        window.onload = function() {
+            scrollToTop();
+        };
+        </script>
+        """,
+        unsafe_allow_html=True
+        )
+
+
+
         c1.header("Global Tempertures by Country since 1750")
         c1.markdown("""
         This data [Climate Change: Earth Surface Temperature Data](https://www.kaggle.com/datasets/berkeleyearth/climate-change-earth-surface-temperature-data)
@@ -309,6 +393,7 @@ elif page == 'Global Temperature Averages since 1849':
         country_list.sort()
         ab = ['All']
         ab.extend(country_list)
+
         country = c2.selectbox("Choose a Specific Country",ab )
 
         data = get_gltm_data(what=None,country=country)
@@ -322,6 +407,18 @@ elif page == 'Global Temperature Averages since 1849':
             data3 = data.groupby(['country','year'])['averagetemperature'].mean().reset_index(name='avg_yrly_temp')
             data3 = data3.pivot(index='country', columns='year')['avg_yrly_temp'].fillna(0)
             fig2 = plot_heatmap(data3)
+            c2.plotly_chart(fig2)
+        else:
+
+            months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+            data3 = data.groupby(['month','year'])['averagetemperature'].mean().reset_index(name='avg_yrly_temp')
+            print(data3.info())
+            #data['month_str'] =data.apply(lambda x: months[x-1])
+            #data3 = data.groupby(['month_str','year'])['averagetemperature'].mean().reset_index(name='avg_yrly_temp')
+            data3 = data3.pivot(index='month', columns='year')['avg_yrly_temp'].fillna(0)
+            print(data3.info())
+            print(data3.head())
+            fig2 = plot_heatmap(data3,its_type='month')
             c2.plotly_chart(fig2)
 
     except URLError as e:
