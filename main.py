@@ -255,41 +255,71 @@ elif page == 'U.S. Weather Radars':
 
 elif page == 'Global Temperature Averages since 1849':
 
-    def convert_lon(row):
-        if row.longitude[-1] == 'W':
-            return -1*float(row.longitude[:-1])
-        return float(row.longitude[:-1])
-
-    def convert_lat(row):
-        if row.latitude[-1] == 'S':
-            return -1*float(row.latitude[:-1])
-        return float(row.latitude[:-1])
-
-    def convert_year(row):
-        year= row['dt'].split('-')[0]
-        return int(year)
-
-    def convert_month(row):
-        month= row['dt'].split('-')[1]
-        return int(month)
-
-    def convert_day(row):
-        day= row['dt'].split('-')[2]
-        return int(day)
-
     @st.cache_data(show_spinner=True)
-    def get_gltm_data():
-        '''
-        Only return a small sample.  Once we can adjust appropriately.
-        
-        '''
-        df = pd.read_csv('data/globallandtemperaturesbymajorcity-ymd.csv')    
-        return df.groupby('city', group_keys=False).apply(lambda x: x.sample(10))
+    def get_gltm_data(what=None,country='All'):
+
+        df = pd.read_csv('data/globallandtemperaturesbymajorcity-ymd.csv')
+        if country=='All':
+            print("Returning Country == All")
+            return df.groupby('country', group_keys=False).apply(lambda x: x.sample(400))
+        else:
+            print("Returning country = {}".format(country))
+            return df[df.country==country]
+
+
+
+    #TODO --make a special dataframefor this
+    def plot_temp(df):
+        import plotly.graph_objects as go
+        import numpy as np
+        coefficients = np.polyfit(df.year.to_numpy(),np.array(df.averagetemperature.mean()),1)
+        trendline = np.polyval(coefficients,df.year.to_numpy())
+        sc_plot = go.Scatter(x=df.year, y=df.averagetemperature.mean() ,mode='markers',
+                                 name='Global Temperatures')
+        trend_plot = go.Scatter(x=df.year, y=trendline ,mode='lines',
+                                 name='Trendline')
+        fig = go.Figure(data=[sc_plot,trend_plot])
+        fig.update_layout(title='Global Temperatures Trends',
+                        xaxis_title='Year',
+                        yaxis_title='Temp in Degress C')
+
+        return fig
+
+    def plot_heatmap(df):
+        import plotly.express as px
+        w31 = df.groupby(['country','year'])['averagetemperature'].mean().reset_index(name='avg_yrly_temp')
+        w32 = w31.pivot(index='country', columns='year')['avg_yrly_temp'].fillna(0)
+
+        fig = px.imshow(w32, x=w32.columns, y=w32.index)
+        fig.update_layout(width=800,height=700)
+        return fig        
 
     try:
-        c1.header("Global Tempertures by Major City since 1849")
-        c1.map = st.map(get_gltm_data())
-        c1.dataframe(get_gltm_data())
+        c1.header("Global Tempertures by Country since 1750")
+        c1.markdown("""
+        This data [Climate Change: Earth Surface Temperature Data](https://www.kaggle.com/datasets/berkeleyearth/climate-change-earth-surface-temperature-data)
+        Compiling global temperature readings  since 1750.
+
+        Collection techniques have improved since 1750 and there is greater and more robust collection.
+        Note that not all countries have data dating back to 1750.
+
+        """
+        )
+        country_list =  list(get_gltm_data(what=None).country.unique())
+        country_list.sort()
+        ab = ['All']
+        ab.extend(country_list)
+        country = c2.selectbox("Choose a Specific Country",ab )
+
+        data = get_gltm_data(what=None,country=country)
+
+        c1.map(data)
+        c1.dataframe(data)
+        fig = plot_temp(data)
+        c2.plotly_chart(fig)
+        if country=='All':
+            fig2 = plot_heatmap(data)
+            c2.plotly_chart(fig2)
 
     except URLError as e:
         st.error(
@@ -300,6 +330,3 @@ elif page == 'Global Temperature Averages since 1849':
         """
             % e.reason
         )
-
-else:
-    c1.header("Something not right")
