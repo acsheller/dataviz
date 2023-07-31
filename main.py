@@ -290,7 +290,7 @@ elif page == 'Global Temperature Averages since 1849':
         import plotly.express as px
         # Define custom colors for the bars
         colors = ['red', 'green', 'blue', 'orange', 'purple']
-        fig = px.imshow(df, x=df.columns, y=df.index,colors=colors)
+        fig = px.imshow(df, x=df.columns, y=df.index)
         fig.update_layout(width=800,height=700)
         return fig        
 
