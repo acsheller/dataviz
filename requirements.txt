@@ -1,6 +1,4 @@
 altair==5.0.1
-anaconda-client==1.11.2
-anaconda-project @ file:///opt/conda/conda-bld/anaconda-project_1660339890420/work
 anyio==3.7.1
 argon2-cffi==21.3.0
 argon2-cffi-bindings==21.2.0
@@ -26,12 +24,6 @@ charset-normalizer @ file:///tmp/build/80754af9/charset-normalizer_1630003229654
 click @ file:///tmp/build/80754af9/click_1646056706450/work
 clyent==1.2.2
 comm==0.1.3
-conda-content-trust @ file:///tmp/abs_5952f1c8-355c-4855-ad2e-538535021ba5h26t22e5/croots/recipe/conda-content-trust_1658126371814/work
-conda-pack @ file:///tmp/build/80754af9/conda-pack_1611163042455/work
-conda-package-handling @ file:///croot/conda-package-handling_1672865015732/work
-conda-repo-cli==1.0.41
-conda-verify==3.4.2
-conda_package_streaming @ file:///croot/conda-package-streaming_1670508151586/work
 country-bounding-boxes==0.2.3
 cryptography @ file:///croot/cryptography_1677533068310/work
 debugpy==1.6.7
